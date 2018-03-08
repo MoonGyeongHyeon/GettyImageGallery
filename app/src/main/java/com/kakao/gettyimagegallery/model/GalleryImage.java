@@ -1,9 +1,12 @@
 package com.kakao.gettyimagegallery.model;
 
+import org.parceler.Parcel;
+
 /**
  * Created by khan.moon on 2018. 3. 8..
  */
 
+@Parcel
 public class GalleryImage {
     private int number;
     private String name;

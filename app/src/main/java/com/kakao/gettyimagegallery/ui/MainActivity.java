@@ -1,7 +1,7 @@
 package com.kakao.gettyimagegallery.ui;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -17,9 +17,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.parceler.Parcels;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,13 +38,37 @@ public class MainActivity extends AppCompatActivity {
     private List<GalleryImage> galleryImages;
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable("galleryImages", Parcels.wrap(galleryImages));
+        outState.putInt("count", ((GalleryImageAdapter)recyclerView.getAdapter()).getCount());
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate");
+
         setContentView(R.layout.activity_main);
 
         galleryImages = new ArrayList<>();
 
         bindView();
+
+        if (savedInstanceState != null) {
+            galleryImages = Parcels.unwrap(savedInstanceState.getParcelable("galleryImages"));
+            switchViewVisibility(recyclerView);
+            switchViewVisibility(progressBar);
+
+            initRecyclerView();
+
+            int count = savedInstanceState.getInt("count");
+
+            GalleryImageAdapter adapter = (GalleryImageAdapter) recyclerView.getAdapter();
+            adapter.setCount(count);
+
+            return;
+        }
 
         network = Network.getInstance();
         network.getHtml(new Callback<ResponseBody>() {
@@ -70,8 +94,8 @@ public class MainActivity extends AppCompatActivity {
 
                 for (Element element:
                         elements) {
-                    Log.d(TAG, element.getElementsByTag("img").get(0).attr("src"));
-                    Log.d(TAG, element.getElementsByClass("gallery-item-caption").get(0).getElementsByTag("a").get(0).text());
+//                    Log.d(TAG, element.getElementsByTag("img").get(0).attr("src"));
+//                    Log.d(TAG, element.getElementsByClass("gallery-item-caption").get(0).getElementsByTag("a").get(0).text());
 
                     galleryImage = new GalleryImage();
                     galleryImage.setNumber(i++);
@@ -123,8 +147,8 @@ public class MainActivity extends AppCompatActivity {
                     int lastPosition = ((LinearLayoutManager) manager).findLastVisibleItemPosition();
                     lastPosition += 1; // position이 0번부터 시작.
 
-                    Log.d(TAG, "LastPosition: " + lastPosition);
-                    Log.d(TAG, "ItemCount: " + galleryImageAdapter.getItemCount());
+//                    Log.d(TAG, "LastPosition: " + lastPosition);
+//                    Log.d(TAG, "ItemCount: " + galleryImageAdapter.getItemCount());
 
                     if (lastPosition >= galleryImageAdapter.getItemCount()) {
                         Log.d(TAG, "Pagination");

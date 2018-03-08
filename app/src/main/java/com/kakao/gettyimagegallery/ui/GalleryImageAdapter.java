@@ -58,6 +58,14 @@ public class GalleryImageAdapter extends RecyclerView.Adapter<GalleryImageAdapte
         count += addCount;
     }
 
+    public int getCount() {
+        return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
+    }
+
     class ViewHolder extends RecyclerView.ViewHolder {
         private ImageView image;
         private TextView name;
