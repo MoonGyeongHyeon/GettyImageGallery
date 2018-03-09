@@ -36,12 +36,30 @@ public class MainActivity extends AppCompatActivity {
 
     private Network network;
     private List<GalleryImage> galleryImages;
+    private boolean isInitialized;
+    private boolean isActive;
+
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelable("galleryImages", Parcels.wrap(galleryImages));
-        outState.putInt("count", ((GalleryImageAdapter)recyclerView.getAdapter()).getCount());
+        if (isInitialized) {
+            Log.d(TAG, "onSaveInstanceState");
+            outState.putParcelable("galleryImages", Parcels.wrap(galleryImages));
+            outState.putInt("count", ((GalleryImageAdapter) recyclerView.getAdapter()).getCount());
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        isActive = true;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        isActive = false;
     }
 
     @Override
@@ -55,7 +73,9 @@ public class MainActivity extends AppCompatActivity {
 
         bindView();
 
-        if (savedInstanceState != null) {
+        if (savedInstanceState != null && savedInstanceState.containsKey("galleryImages")) {
+            Log.d(TAG, "available BackupState");
+
             galleryImages = Parcels.unwrap(savedInstanceState.getParcelable("galleryImages"));
             switchViewVisibility(recyclerView);
             switchViewVisibility(progressBar);
@@ -67,6 +87,8 @@ public class MainActivity extends AppCompatActivity {
             GalleryImageAdapter adapter = (GalleryImageAdapter) recyclerView.getAdapter();
             adapter.setCount(count);
 
+            isInitialized = true;
+
             return;
         }
 
@@ -76,38 +98,43 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 Log.d(TAG, "onResponse");
 
-                String html;
-                try {
-                    html = response.body().string();
-                    response.body().close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return;
-                }
+                if (isActive) {
+                    Log.d(TAG, "isActive");
+                    String html;
+                    try {
+                        html = response.body().string();
+                        response.body().close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return;
+                    }
 
-                Document document = Jsoup.parse(html);
-                Elements elements = document.getElementsByClass("gallery-item-group");
+                    Document document = Jsoup.parse(html);
+                    Elements elements = document.getElementsByClass("gallery-item-group");
 
-                GalleryImage galleryImage = null;
+                    GalleryImage galleryImage = null;
 
-                int i = 1;
+                    int i = 1;
 
-                for (Element element:
-                        elements) {
+                    for (Element element :
+                            elements) {
 //                    Log.d(TAG, element.getElementsByTag("img").get(0).attr("src"));
 //                    Log.d(TAG, element.getElementsByClass("gallery-item-caption").get(0).getElementsByTag("a").get(0).text());
 
-                    galleryImage = new GalleryImage();
-                    galleryImage.setNumber(i++);
-                    galleryImage.setName(element.getElementsByClass("gallery-item-caption").get(0).getElementsByTag("a").get(0).text());
-                    galleryImage.setUrl(Environment.baseUrl + element.getElementsByTag("img").get(0).attr("src"));
-                    galleryImages.add(galleryImage);
+                        galleryImage = new GalleryImage();
+                        galleryImage.setNumber(i++);
+                        galleryImage.setName(element.getElementsByClass("gallery-item-caption").get(0).getElementsByTag("a").get(0).text());
+                        galleryImage.setUrl(Environment.baseUrl + element.getElementsByTag("img").get(0).attr("src"));
+                        galleryImages.add(galleryImage);
+                    }
+
+                    switchViewVisibility(recyclerView);
+                    switchViewVisibility(progressBar);
+
+                    initRecyclerView();
+
+                    isInitialized = true;
                 }
-
-                switchViewVisibility(recyclerView);
-                switchViewVisibility(progressBar);
-
-                initRecyclerView();
             }
 
             @Override
