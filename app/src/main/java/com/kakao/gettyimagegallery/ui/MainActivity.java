@@ -139,25 +139,27 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                if (newState == RecyclerView.SCROLL_STATE_DRAGGING) {
-                    RecyclerView.LayoutManager manager = recyclerView.getLayoutManager();
-                    GalleryImageAdapter galleryImageAdapter = (GalleryImageAdapter) recyclerView.getAdapter();
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
 
-                    int lastPosition = ((LinearLayoutManager) manager).findLastVisibleItemPosition();
-                    lastPosition += 1; // position이 0번부터 시작.
+                Log.d(TAG, "In scroll");
 
-//                    Log.d(TAG, "LastPosition: " + lastPosition);
-//                    Log.d(TAG, "ItemCount: " + galleryImageAdapter.getItemCount());
+                RecyclerView.LayoutManager manager = recyclerView.getLayoutManager();
+                GalleryImageAdapter galleryImageAdapter = (GalleryImageAdapter) recyclerView.getAdapter();
 
-                    if (lastPosition >= galleryImageAdapter.getItemCount()) {
-                        Log.d(TAG, "Pagination");
-                        galleryImageAdapter.addItemCount(10);
-                        galleryImageAdapter.notifyDataSetChanged();
+                int lastPosition = ((LinearLayoutManager) manager).findLastVisibleItemPosition();
+                lastPosition += 1; // position이 0번부터 시작.
 
-                    }
+                Log.d(TAG, "LastPosition: " + lastPosition);
+                Log.d(TAG, "ItemCount: " + galleryImageAdapter.getItemCount());
+
+                if (lastPosition >= galleryImageAdapter.getItemCount()) {
+                    Log.d(TAG, "Pagination");
+                    galleryImageAdapter.addItemCount(10);
+                    galleryImageAdapter.notifyDataSetChanged();
                 }
             }
+
         });
     }
 }
