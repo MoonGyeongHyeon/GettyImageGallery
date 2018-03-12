@@ -1,6 +1,8 @@
 package com.kakao.gettyimagegallery.ui;
 
+import android.content.res.Configuration;
 import android.os.Bundle;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -33,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
+    private ViewPager viewPager;
 
     private Network network;
     private List<GalleryImage> galleryImages;
@@ -46,13 +49,20 @@ public class MainActivity extends AppCompatActivity {
         if (isInitialized) {
             Log.d(TAG, "onSaveInstanceState");
             outState.putParcelable("galleryImages", Parcels.wrap(galleryImages));
-            outState.putInt("count", ((GalleryImageAdapter) recyclerView.getAdapter()).getCount());
+
+            if (isPortrait()) {
+                outState.putInt("currentPosition", ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition());
+            } else {
+                Log.d(TAG, "Landscape CurrentPosition: " + viewPager.getCurrentItem());
+                outState.putInt("currentPosition", viewPager.getCurrentItem());
+            }
         }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        Log.d(TAG, "onStart");
         isActive = true;
     }
 
@@ -69,28 +79,79 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        galleryImages = new ArrayList<>();
+        if (isPortrait()) {
+            bindPortraitView();
 
-        bindView();
+            ViewInitializer portraitInitializer = new ViewInitializer() {
+                @Override
+                public void init() {
+                    initRecyclerView();
 
-        if (savedInstanceState != null && savedInstanceState.containsKey("galleryImages")) {
-            Log.d(TAG, "available BackupState");
+                    switchViewVisibility(recyclerView);
+                    switchViewVisibility(progressBar);
+                }
+            };
 
-            galleryImages = Parcels.unwrap(savedInstanceState.getParcelable("galleryImages"));
-            switchViewVisibility(recyclerView);
-            switchViewVisibility(progressBar);
+            if (savedInstanceState != null && savedInstanceState.containsKey("galleryImages")) {
+                Log.d(TAG, "available BackupState");
 
-            initRecyclerView();
+                galleryImages = Parcels.unwrap(savedInstanceState.getParcelable("galleryImages"));
 
-            int count = savedInstanceState.getInt("count");
+                portraitInitializer.init();
 
-            GalleryImageAdapter adapter = (GalleryImageAdapter) recyclerView.getAdapter();
-            adapter.setCount(count);
+                int currentPosition = savedInstanceState.getInt("currentPosition");
+                recyclerView.getLayoutManager().scrollToPosition(currentPosition);
 
-            isInitialized = true;
+                isInitialized = true;
 
-            return;
+                return;
+            }
+
+            fetchGettyImageData(portraitInitializer);
+
+        } else {
+            bindLandscapeView();
+
+            ViewInitializer landscapeInitializer = new ViewInitializer() {
+                @Override
+                public void init() {
+                    initViewPager();
+
+                    switchViewVisibility(viewPager);
+                    switchViewVisibility(progressBar);
+                }
+            };
+
+            if (savedInstanceState != null && savedInstanceState.containsKey("galleryImages")) {
+                Log.d(TAG, "available BackupState");
+
+                galleryImages = Parcels.unwrap(savedInstanceState.getParcelable("galleryImages"));
+
+                landscapeInitializer.init();
+
+                int currentPosition = savedInstanceState.getInt("currentPosition");
+                viewPager.setCurrentItem(currentPosition, false);
+
+                isInitialized = true;
+
+                return;
+            }
+
+            fetchGettyImageData(landscapeInitializer);
         }
+    }
+
+    private boolean isPortrait() {
+        return getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
+    }
+
+    private void bindPortraitView() {
+        recyclerView = findViewById(R.id.recyclerview);
+        progressBar = findViewById(R.id.progressbar);
+    }
+
+    private void fetchGettyImageData(ViewInitializer viewInitializer) {
+        final ViewInitializer initializer = viewInitializer;
 
         network = Network.getInstance();
         network.getHtml(new Callback<ResponseBody>() {
@@ -115,6 +176,7 @@ public class MainActivity extends AppCompatActivity {
                     GalleryImage galleryImage = null;
 
                     int i = 1;
+                    galleryImages = new ArrayList<>();
 
                     for (Element element :
                             elements) {
@@ -128,10 +190,9 @@ public class MainActivity extends AppCompatActivity {
                         galleryImages.add(galleryImage);
                     }
 
-                    switchViewVisibility(recyclerView);
-                    switchViewVisibility(progressBar);
-
-                    initRecyclerView();
+                    if (initializer != null) {
+                        initializer.init();
+                    }
 
                     isInitialized = true;
                 }
@@ -144,8 +205,8 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void bindView() {
-        recyclerView = findViewById(R.id.recyclerview);
+    private void bindLandscapeView() {
+        viewPager = findViewById(R.id.viewpager);
         progressBar = findViewById(R.id.progressbar);
     }
 
@@ -163,30 +224,13 @@ public class MainActivity extends AppCompatActivity {
 
         GalleryImageAdapter adapter = new GalleryImageAdapter(galleryImages);
         recyclerView.setAdapter(adapter);
-
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-
-                Log.d(TAG, "In scroll");
-
-                RecyclerView.LayoutManager manager = recyclerView.getLayoutManager();
-                GalleryImageAdapter galleryImageAdapter = (GalleryImageAdapter) recyclerView.getAdapter();
-
-                int lastPosition = ((LinearLayoutManager) manager).findLastVisibleItemPosition();
-                lastPosition += 1; // position이 0번부터 시작.
-
-                Log.d(TAG, "LastPosition: " + lastPosition);
-                Log.d(TAG, "ItemCount: " + galleryImageAdapter.getItemCount());
-
-                if (lastPosition >= galleryImageAdapter.getItemCount()) {
-                    Log.d(TAG, "Pagination");
-                    galleryImageAdapter.addItemCount(10);
-                    galleryImageAdapter.notifyDataSetChanged();
-                }
-            }
-
-        });
     }
+
+
+    private void initViewPager() {
+        GalleryImagePagerAdapter pagerAdapter = new GalleryImagePagerAdapter(galleryImages);
+
+        viewPager.setAdapter(pagerAdapter);
+    }
+
 }

@@ -23,7 +23,6 @@ import java.util.Locale;
 public class GalleryImageAdapter extends RecyclerView.Adapter<GalleryImageAdapter.ViewHolder> {
 
     private List<GalleryImage> galleryImages;
-    private int count = 20;
 
     public GalleryImageAdapter(List<GalleryImage> galleryImages) {
         this.galleryImages = galleryImages;
@@ -43,27 +42,7 @@ public class GalleryImageAdapter extends RecyclerView.Adapter<GalleryImageAdapte
 
     @Override
     public int getItemCount() {
-        if (galleryImages == null) {
-            return 0;
-        }
-
-        if (galleryImages.size() < count) {
-            return galleryImages.size();
-        }
-
-        return count;
-    }
-
-    public void addItemCount(int addCount) {
-        count += addCount;
-    }
-
-    public int getCount() {
-        return count;
-    }
-
-    public void setCount(int count) {
-        this.count = count;
+        return galleryImages != null ? galleryImages.size() : 0;
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
