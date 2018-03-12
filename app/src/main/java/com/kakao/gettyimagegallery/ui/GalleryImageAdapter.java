@@ -8,10 +8,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.kakao.gettyimagegallery.R;
 import com.kakao.gettyimagegallery.model.GalleryImage;
+import com.kakao.gettyimagegallery.net.NetworkConnectivityManager;
 
 import java.util.List;
 import java.util.Locale;
@@ -61,9 +63,14 @@ public class GalleryImageAdapter extends RecyclerView.Adapter<GalleryImageAdapte
         }
 
         public void changeViewContents(GalleryImage galleryImage) {
-            Glide.with(context)
-                    .load(galleryImage.getUrl())
-                    .into(image);
+            if (NetworkConnectivityManager.getInstance().isConnected()) {
+                Glide.with(context)
+                        .load(galleryImage.getUrl())
+                        .into(image);
+            } else {
+                Toast.makeText(context, "인터넷 연결 상태를 확인해주세요.", Toast.LENGTH_SHORT).show();
+            }
+
             name.setText(galleryImage.getName());
             number.setText(String.format(Locale.getDefault(),"%d.",galleryImage.getNumber()));
         }

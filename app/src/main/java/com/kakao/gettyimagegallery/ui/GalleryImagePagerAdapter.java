@@ -1,16 +1,17 @@
 package com.kakao.gettyimagegallery.ui;
 
 import android.support.v4.view.PagerAdapter;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.kakao.gettyimagegallery.R;
 import com.kakao.gettyimagegallery.model.GalleryImage;
+import com.kakao.gettyimagegallery.net.NetworkConnectivityManager;
 
 import java.util.List;
 import java.util.Locale;
@@ -44,9 +45,14 @@ public class GalleryImagePagerAdapter extends PagerAdapter {
         TextView nameTextView = view.findViewById(R.id.textview_gallery_image_name);
         TextView numberTextView = view.findViewById(R.id.textview_gallery_number);
 
-        Glide.with(view.getContext())
-                .load(galleryImage.getUrl())
-                .into(imageView);
+        if (NetworkConnectivityManager.getInstance().isConnected()) {
+            Glide.with(view.getContext())
+                    .load(galleryImage.getUrl())
+                    .into(imageView);
+        } else {
+            Toast.makeText(view.getContext(), "인터넷 연결 상태를 확인해주세요.", Toast.LENGTH_SHORT).show();
+        }
+
         nameTextView.setText(galleryImage.getName());
         numberTextView.setText(String.format(Locale.getDefault(),"%d.",galleryImage.getNumber()));
 

@@ -8,12 +8,15 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.kakao.gettyimagegallery.Environment;
 import com.kakao.gettyimagegallery.R;
 import com.kakao.gettyimagegallery.model.GalleryImage;
 import com.kakao.gettyimagegallery.net.Network;
+import com.kakao.gettyimagegallery.net.NetworkConnectivityManager;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -36,11 +39,14 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private ViewPager viewPager;
+    private Button networkRetryButton;
 
     private Network network;
     private List<GalleryImage> galleryImages;
     private boolean isInitialized;
     private boolean isActive;
+
+    private ViewInitializer viewInitializer;
 
 
     @Override
@@ -82,13 +88,13 @@ public class MainActivity extends AppCompatActivity {
         if (isPortrait()) {
             bindPortraitView();
 
-            ViewInitializer portraitInitializer = new ViewInitializer() {
+            viewInitializer = new ViewInitializer() {
                 @Override
                 public void init() {
                     initRecyclerView();
 
-                    switchViewVisibility(recyclerView);
-                    switchViewVisibility(progressBar);
+                    recyclerView.setVisibility(View.VISIBLE);
+                    progressBar.setVisibility(View.GONE);
                 }
             };
 
@@ -97,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
 
                 galleryImages = Parcels.unwrap(savedInstanceState.getParcelable("galleryImages"));
 
-                portraitInitializer.init();
+                viewInitializer.init();
 
                 int currentPosition = savedInstanceState.getInt("currentPosition");
                 recyclerView.getLayoutManager().scrollToPosition(currentPosition);
@@ -107,18 +113,18 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            fetchGettyImageData(portraitInitializer);
+            fetchGettyImageData();
 
         } else {
             bindLandscapeView();
 
-            ViewInitializer landscapeInitializer = new ViewInitializer() {
+            viewInitializer = new ViewInitializer() {
                 @Override
                 public void init() {
                     initViewPager();
 
-                    switchViewVisibility(viewPager);
-                    switchViewVisibility(progressBar);
+                    viewPager.setVisibility(View.VISIBLE);
+                    progressBar.setVisibility(View.GONE);
                 }
             };
 
@@ -127,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
 
                 galleryImages = Parcels.unwrap(savedInstanceState.getParcelable("galleryImages"));
 
-                landscapeInitializer.init();
+                viewInitializer.init();
 
                 int currentPosition = savedInstanceState.getInt("currentPosition");
                 viewPager.setCurrentItem(currentPosition, false);
@@ -137,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            fetchGettyImageData(landscapeInitializer);
+            fetchGettyImageData();
         }
     }
 
@@ -148,10 +154,15 @@ public class MainActivity extends AppCompatActivity {
     private void bindPortraitView() {
         recyclerView = findViewById(R.id.recyclerview);
         progressBar = findViewById(R.id.progressbar);
+        networkRetryButton = findViewById(R.id.button_retry_connection);
     }
 
-    private void fetchGettyImageData(ViewInitializer viewInitializer) {
-        final ViewInitializer initializer = viewInitializer;
+    private void fetchGettyImageData() {
+        if (!NetworkConnectivityManager.getInstance().isConnected()) {
+            initNetworkNotConnectedView();
+
+            return;
+        }
 
         network = Network.getInstance();
         network.getHtml(new Callback<ResponseBody>() {
@@ -190,8 +201,8 @@ public class MainActivity extends AppCompatActivity {
                         galleryImages.add(galleryImage);
                     }
 
-                    if (initializer != null) {
-                        initializer.init();
+                    if (viewInitializer != null) {
+                        viewInitializer.init();
                     }
 
                     isInitialized = true;
@@ -201,6 +212,27 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 Log.d(TAG, "onFailure");
+                Toast.makeText(MainActivity.this, "인터넷 연결 상태를 확인해주세요.", Toast.LENGTH_SHORT).show();
+
+                initNetworkNotConnectedView();
+            }
+        });
+    }
+
+    private void initNetworkNotConnectedView() {
+        Log.d(TAG, "NetworkConnection is failed");
+        Toast.makeText(this, "인터넷 연결 상태를 확인해주세요.", Toast.LENGTH_SHORT).show();
+
+        progressBar.setVisibility(View.GONE);
+        networkRetryButton.setVisibility(View.VISIBLE);
+
+        networkRetryButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                progressBar.setVisibility(View.VISIBLE);
+                networkRetryButton.setVisibility(View.GONE);
+
+                fetchGettyImageData();
             }
         });
     }
@@ -208,14 +240,7 @@ public class MainActivity extends AppCompatActivity {
     private void bindLandscapeView() {
         viewPager = findViewById(R.id.viewpager);
         progressBar = findViewById(R.id.progressbar);
-    }
-
-    private void switchViewVisibility(View view) {
-        if (view.getVisibility() == View.VISIBLE) {
-            view.setVisibility(View.GONE);
-        } else {
-            view.setVisibility(View.VISIBLE);
-        }
+        networkRetryButton = findViewById(R.id.button_retry_connection);
     }
 
     private void initRecyclerView() {
