@@ -43,39 +43,41 @@ public class MainActivity extends AppCompatActivity {
 
     private Network network;
     private List<GalleryImage> galleryImages;
-    private boolean isInitialized;
-    private boolean isActive;
+    private boolean isFetched;
+    private boolean isConfigChanged;
 
     private ViewInitializer viewInitializer;
 
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        if (isInitialized) {
-            Log.d(TAG, "onSaveInstanceState");
-            outState.putParcelable("galleryImages", Parcels.wrap(galleryImages));
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        setContentView(R.layout.activity_main);
+        Log.d(TAG, "onConfigurationChanged: " + newConfig.orientation);
 
-            if (isPortrait()) {
-                outState.putInt("currentPosition", ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition());
+        isConfigChanged = true;
+
+        init();
+
+        if (isFetched) {
+            Log.d(TAG, "is fetched");
+            viewInitializer.init();
+
+            int currentPosition;
+            if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                currentPosition = viewPager.getCurrentItem();
+                recyclerView.scrollToPosition(currentPosition);
             } else {
-                Log.d(TAG, "Landscape CurrentPosition: " + viewPager.getCurrentItem());
-                outState.putInt("currentPosition", viewPager.getCurrentItem());
+                currentPosition = ((LinearLayoutManager)recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
+                viewPager.setCurrentItem(currentPosition);
             }
+            Log.d(TAG, "pos: " + currentPosition);
+        } else {
+            Log.d(TAG, "is not fetched");
+            fetchGettyImageData();
         }
-    }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Log.d(TAG, "onStart");
-        isActive = true;
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        isActive = false;
+        isConfigChanged = false;
     }
 
     @Override
@@ -85,6 +87,15 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
+        isConfigChanged = false;
+        isFetched = false;
+
+        init();
+        fetchGettyImageData();
+    }
+
+    private void init() {
+        Log.d(TAG, "init()");
         if (isPortrait()) {
             bindPortraitView();
 
@@ -97,24 +108,6 @@ public class MainActivity extends AppCompatActivity {
                     progressBar.setVisibility(View.GONE);
                 }
             };
-
-            if (savedInstanceState != null && savedInstanceState.containsKey("galleryImages")) {
-                Log.d(TAG, "available BackupState");
-
-                galleryImages = Parcels.unwrap(savedInstanceState.getParcelable("galleryImages"));
-
-                viewInitializer.init();
-
-                int currentPosition = savedInstanceState.getInt("currentPosition");
-                recyclerView.getLayoutManager().scrollToPosition(currentPosition);
-
-                isInitialized = true;
-
-                return;
-            }
-
-            fetchGettyImageData();
-
         } else {
             bindLandscapeView();
 
@@ -127,27 +120,11 @@ public class MainActivity extends AppCompatActivity {
                     progressBar.setVisibility(View.GONE);
                 }
             };
-
-            if (savedInstanceState != null && savedInstanceState.containsKey("galleryImages")) {
-                Log.d(TAG, "available BackupState");
-
-                galleryImages = Parcels.unwrap(savedInstanceState.getParcelable("galleryImages"));
-
-                viewInitializer.init();
-
-                int currentPosition = savedInstanceState.getInt("currentPosition");
-                viewPager.setCurrentItem(currentPosition, false);
-
-                isInitialized = true;
-
-                return;
-            }
-
-            fetchGettyImageData();
         }
     }
 
     private boolean isPortrait() {
+        Log.d(TAG, "getResources().getConfiguration().orientation: " + getResources().getConfiguration().orientation);
         return getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
     }
 
@@ -170,8 +147,8 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 Log.d(TAG, "onResponse");
 
-                if (isActive) {
-                    Log.d(TAG, "isActive");
+                if (!isConfigChanged && !isFetched) {
+                    Log.d(TAG, "get Data");
                     String html;
                     try {
                         html = response.body().string();
@@ -205,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
                         viewInitializer.init();
                     }
 
-                    isInitialized = true;
+                    isFetched = true;
                 }
             }
 
