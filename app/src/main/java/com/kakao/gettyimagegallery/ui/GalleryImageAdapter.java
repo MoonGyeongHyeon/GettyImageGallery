@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.kakao.gettyimagegallery.App;
 import com.kakao.gettyimagegallery.R;
 import com.kakao.gettyimagegallery.model.GalleryImage;
 import com.kakao.gettyimagegallery.net.NetworkConnectivityManager;
@@ -47,28 +48,25 @@ public class GalleryImageAdapter extends RecyclerView.Adapter<GalleryImageAdapte
         return galleryImages != null ? galleryImages.size() : 0;
     }
 
-    class ViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolder extends RecyclerView.ViewHolder {
         private ImageView image;
         private TextView name;
         private TextView number;
-        private Context context;
 
         public ViewHolder(View itemView) {
             super(itemView);
             image = itemView.findViewById(R.id.imageview_gallery_image);
             name = itemView.findViewById(R.id.textview_gallery_image_name);
             number = itemView.findViewById(R.id.textview_gallery_number);
-
-            context = itemView.getContext();
         }
 
         public void changeViewContents(GalleryImage galleryImage) {
             if (NetworkConnectivityManager.getInstance().isConnected()) {
-                Glide.with(context)
+                Glide.with(App.getInstance().getApplicationContext())
                         .load(galleryImage.getUrl())
                         .into(image);
             } else {
-                Toast.makeText(context, "인터넷 연결 상태를 확인해주세요.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(App.getInstance().getApplicationContext(), "인터넷 연결 상태를 확인해주세요.", Toast.LENGTH_SHORT).show();
             }
 
             name.setText(galleryImage.getName());
