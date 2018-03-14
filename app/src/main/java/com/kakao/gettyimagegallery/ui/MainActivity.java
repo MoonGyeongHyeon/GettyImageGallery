@@ -22,7 +22,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.parceler.Parcels;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private List<GalleryImage> galleryImages;
     private boolean isFetched;
     private boolean isConfigChanged;
+    private int currentOrientation;
 
     private ViewInitializer viewInitializer;
 
@@ -52,33 +52,43 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        setContentView(R.layout.activity_main);
-        Log.d(TAG, "onConfigurationChanged: " + newConfig.orientation);
+        Log.d(TAG, "orientation: " + newConfig.orientation);
 
         isConfigChanged = true;
 
-        init();
+        if (checkOrientationChanged(newConfig)) {
+            Log.d(TAG, "Orientation is changed");
+            currentOrientation = newConfig.orientation;
+            setContentView(R.layout.activity_main);
 
-        if (isFetched) {
-            Log.d(TAG, "is fetched");
-            viewInitializer.init();
+            init();
 
-            int currentPosition;
-            if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-                currentPosition = viewPager.getCurrentItem();
-                recyclerView.scrollToPosition(currentPosition);
+            if (isFetched) {
+                Log.d(TAG, "is fetched");
+                viewInitializer.init();
+
+                int currentPosition;
+                if (isPortrait()) {
+                    currentPosition = viewPager.getCurrentItem();
+                    recyclerView.scrollToPosition(currentPosition);
+                } else {
+                    currentPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
+                    viewPager.setCurrentItem(currentPosition);
+                }
+                Log.d(TAG, "pos: " + currentPosition);
             } else {
-                currentPosition = ((LinearLayoutManager)recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
-                viewPager.setCurrentItem(currentPosition);
+                Log.d(TAG, "is not fetched");
+                fetchGettyImageData();
             }
-            Log.d(TAG, "pos: " + currentPosition);
-        } else {
-            Log.d(TAG, "is not fetched");
-            fetchGettyImageData();
         }
 
         isConfigChanged = false;
     }
+
+    private boolean checkOrientationChanged(Configuration newConfig) {
+        return currentOrientation != newConfig.orientation;
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
 
         isConfigChanged = false;
         isFetched = false;
+        currentOrientation = getResources().getConfiguration().orientation;
 
         init();
         fetchGettyImageData();
@@ -124,8 +135,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isPortrait() {
-        Log.d(TAG, "getResources().getConfiguration().orientation: " + getResources().getConfiguration().orientation);
-        return getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT;
+        return currentOrientation == Configuration.ORIENTATION_PORTRAIT;
     }
 
     private void bindPortraitView() {
@@ -146,6 +156,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 Log.d(TAG, "onResponse");
+
+                if (isFinishing()) {
+                    return;
+                }
 
                 if (!isConfigChanged && !isFetched) {
                     Log.d(TAG, "get Data");
@@ -168,8 +182,6 @@ public class MainActivity extends AppCompatActivity {
 
                     for (Element element :
                             elements) {
-//                    Log.d(TAG, element.getElementsByTag("img").get(0).attr("src"));
-//                    Log.d(TAG, element.getElementsByClass("gallery-item-caption").get(0).getElementsByTag("a").get(0).text());
 
                         galleryImage = new GalleryImage();
                         galleryImage.setNumber(i++);
