@@ -61,13 +61,10 @@ public class GalleryImageAdapter extends RecyclerView.Adapter<GalleryImageAdapte
         }
 
         public void changeViewContents(GalleryImage galleryImage) {
-            if (NetworkConnectivityManager.getInstance().isConnected()) {
-                Glide.with(App.getInstance().getApplicationContext())
-                        .load(galleryImage.getUrl())
-                        .into(image);
-            } else {
-                Toast.makeText(App.getInstance().getApplicationContext(), "인터넷 연결 상태를 확인해주세요.", Toast.LENGTH_SHORT).show();
-            }
+            Glide.with(App.getInstance().getApplicationContext())
+                    .load(galleryImage.getUrl())
+                    .error(R.drawable.img_loading_failed)
+                    .into(image);
 
             name.setText(galleryImage.getName());
             number.setText(String.format(Locale.getDefault(),"%d.",galleryImage.getNumber()));

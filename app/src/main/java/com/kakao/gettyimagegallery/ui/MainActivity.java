@@ -145,12 +145,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetchGettyImageData() {
-        if (!NetworkConnectivityManager.getInstance().isConnected()) {
-            initNetworkNotConnectedView();
-
-            return;
-        }
-
         network = Network.getInstance();
         network.getHtml(new Callback<ResponseBody>() {
             @Override
@@ -200,8 +194,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
-                Log.d(TAG, "onFailure");
-                Toast.makeText(MainActivity.this, "인터넷 연결 상태를 확인해주세요.", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "onFailure, message: " + t.getMessage());
 
                 initNetworkNotConnectedView();
             }

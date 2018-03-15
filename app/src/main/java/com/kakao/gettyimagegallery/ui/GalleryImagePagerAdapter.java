@@ -45,13 +45,10 @@ public class GalleryImagePagerAdapter extends PagerAdapter {
         TextView nameTextView = view.findViewById(R.id.textview_gallery_image_name);
         TextView numberTextView = view.findViewById(R.id.textview_gallery_number);
 
-        if (NetworkConnectivityManager.getInstance().isConnected()) {
-            Glide.with(view.getContext())
-                    .load(galleryImage.getUrl())
-                    .into(imageView);
-        } else {
-            Toast.makeText(view.getContext(), "인터넷 연결 상태를 확인해주세요.", Toast.LENGTH_SHORT).show();
-        }
+        Glide.with(view.getContext())
+                .load(galleryImage.getUrl())
+                .error(R.drawable.img_loading_failed)
+                .into(imageView);
 
         nameTextView.setText(galleryImage.getName());
         numberTextView.setText(String.format(Locale.getDefault(),"%d.",galleryImage.getNumber()));
