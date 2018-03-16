@@ -1,5 +1,6 @@
 package com.kakao.gettyimagegallery.ui;
 
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -13,6 +14,9 @@ import com.kakao.gettyimagegallery.App;
 import com.kakao.gettyimagegallery.R;
 import com.kakao.gettyimagegallery.model.GalleryImage;
 
+import org.parceler.Parcels;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -36,8 +40,17 @@ public class GalleryImageAdapter extends RecyclerView.Adapter<GalleryImageAdapte
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         holder.changeViewContents(galleryImages.get(position));
+        holder.image.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(v.getContext(), ImageViewerActivity.class);
+                intent.putExtra("galleryImages", Parcels.wrap(new ArrayList<>(galleryImages)));
+                intent.putExtra("viewingPosition", position);
+                v.getContext().startActivity(intent);
+            }
+        });
     }
 
     @Override
@@ -64,7 +77,7 @@ public class GalleryImageAdapter extends RecyclerView.Adapter<GalleryImageAdapte
                     .into(image);
 
             name.setText(galleryImage.getName());
-            number.setText(String.format(Locale.getDefault(),"%d.",galleryImage.getNumber()));
+            number.setText(String.format(Locale.getDefault(), "%d.", galleryImage.getNumber()));
         }
 
     }
