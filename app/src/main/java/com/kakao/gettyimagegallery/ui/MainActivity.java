@@ -35,7 +35,6 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
-    private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private ViewPager viewPager;
     private Button networkRetryButton;
@@ -54,35 +53,35 @@ public class MainActivity extends AppCompatActivity {
         super.onConfigurationChanged(newConfig);
         Log.d(TAG, "orientation: " + newConfig.orientation);
 
-        isConfigChanged = true;
-
-        if (checkOrientationChanged(newConfig)) {
-            Log.d(TAG, "Orientation is changed");
-            currentOrientation = newConfig.orientation;
-            setContentView(R.layout.activity_main);
-
-            init();
-
-            if (isFetched) {
-                Log.d(TAG, "is fetched");
-                viewInitializer.init();
-
-                int currentPosition;
-                if (isPortrait()) {
-                    currentPosition = viewPager.getCurrentItem();
-                    recyclerView.scrollToPosition(currentPosition);
-                } else {
-                    currentPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
-                    viewPager.setCurrentItem(currentPosition);
-                }
-                Log.d(TAG, "pos: " + currentPosition);
-            } else {
-                Log.d(TAG, "is not fetched");
-                fetchGettyImageData();
-            }
-        }
-
-        isConfigChanged = false;
+//        isConfigChanged = true;
+//
+//        if (checkOrientationChanged(newConfig)) {
+//            Log.d(TAG, "Orientation is changed");
+//            currentOrientation = newConfig.orientation;
+//            setContentView(R.layout.activity_main);
+//
+//            init();
+//
+//            if (isFetched) {
+//                Log.d(TAG, "is fetched");
+//                viewInitializer.init();
+//
+//                int currentPosition;
+//                if (isPortrait()) {
+//                    currentPosition = viewPager.getCurrentItem();
+//                    recyclerView.scrollToPosition(currentPosition);
+//                } else {
+//                    currentPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
+//                    viewPager.setCurrentItem(currentPosition);
+//                }
+//                Log.d(TAG, "pos: " + currentPosition);
+//            } else {
+//                Log.d(TAG, "is not fetched");
+//                fetchGettyImageData();
+//            }
+//        }
+//
+//        isConfigChanged = false;
     }
 
     private boolean checkOrientationChanged(Configuration newConfig) {
@@ -107,39 +106,25 @@ public class MainActivity extends AppCompatActivity {
 
     private void init() {
         Log.d(TAG, "init()");
-        if (isPortrait()) {
-            bindPortraitView();
+        bindView();
 
-            viewInitializer = new ViewInitializer() {
-                @Override
-                public void init() {
-                    initRecyclerView();
+        viewInitializer = new ViewInitializer() {
+            @Override
+            public void init() {
+                initViewPager();
 
-                    recyclerView.setVisibility(View.VISIBLE);
-                    progressBar.setVisibility(View.GONE);
-                }
-            };
-        } else {
-            bindLandscapeView();
-
-            viewInitializer = new ViewInitializer() {
-                @Override
-                public void init() {
-                    initViewPager();
-
-                    viewPager.setVisibility(View.VISIBLE);
-                    progressBar.setVisibility(View.GONE);
-                }
-            };
-        }
+                viewPager.setVisibility(View.VISIBLE);
+                progressBar.setVisibility(View.GONE);
+            }
+        };
     }
 
     private boolean isPortrait() {
         return currentOrientation == Configuration.ORIENTATION_PORTRAIT;
     }
 
-    private void bindPortraitView() {
-        recyclerView = findViewById(R.id.recyclerview);
+    private void bindView() {
+        viewPager = findViewById(R.id.viewpager);
         progressBar = findViewById(R.id.progressbar);
         networkRetryButton = findViewById(R.id.button_retry_connection);
     }
@@ -218,21 +203,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
-    private void bindLandscapeView() {
-        viewPager = findViewById(R.id.viewpager);
-        progressBar = findViewById(R.id.progressbar);
-        networkRetryButton = findViewById(R.id.button_retry_connection);
-    }
-
-    private void initRecyclerView() {
-        RecyclerView.LayoutManager manager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        recyclerView.setLayoutManager(manager);
-
-        GalleryImageAdapter adapter = new GalleryImageAdapter(galleryImages);
-        recyclerView.setAdapter(adapter);
-    }
-
 
     private void initViewPager() {
         GalleryImagePagerAdapter pagerAdapter = new GalleryImagePagerAdapter(galleryImages);

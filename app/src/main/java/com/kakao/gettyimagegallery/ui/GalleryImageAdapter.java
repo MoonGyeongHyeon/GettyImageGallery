@@ -1,6 +1,5 @@
 package com.kakao.gettyimagegallery.ui;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -8,13 +7,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.kakao.gettyimagegallery.App;
 import com.kakao.gettyimagegallery.R;
 import com.kakao.gettyimagegallery.model.GalleryImage;
-import com.kakao.gettyimagegallery.net.NetworkConnectivityManager;
 
 import java.util.List;
 import java.util.Locale;
@@ -34,7 +31,7 @@ public class GalleryImageAdapter extends RecyclerView.Adapter<GalleryImageAdapte
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View layout = LayoutInflater.from(parent.getContext()).inflate(R.layout.gallery_image, parent, false);
+        View layout = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_gallery_image, parent, false);
         return new ViewHolder(layout);
     }
 
