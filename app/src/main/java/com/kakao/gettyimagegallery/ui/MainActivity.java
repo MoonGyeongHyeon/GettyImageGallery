@@ -43,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
     private List<GalleryImage> galleryImages;
     private boolean isFetched;
     private boolean isConfigChanged;
-    private int currentOrientation;
 
     private ViewInitializer viewInitializer;
 
@@ -52,42 +51,7 @@ public class MainActivity extends AppCompatActivity {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         Log.d(TAG, "orientation: " + newConfig.orientation);
-
-//        isConfigChanged = true;
-//
-//        if (checkOrientationChanged(newConfig)) {
-//            Log.d(TAG, "Orientation is changed");
-//            currentOrientation = newConfig.orientation;
-//            setContentView(R.layout.activity_main);
-//
-//            init();
-//
-//            if (isFetched) {
-//                Log.d(TAG, "is fetched");
-//                viewInitializer.init();
-//
-//                int currentPosition;
-//                if (isPortrait()) {
-//                    currentPosition = viewPager.getCurrentItem();
-//                    recyclerView.scrollToPosition(currentPosition);
-//                } else {
-//                    currentPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
-//                    viewPager.setCurrentItem(currentPosition);
-//                }
-//                Log.d(TAG, "pos: " + currentPosition);
-//            } else {
-//                Log.d(TAG, "is not fetched");
-//                fetchGettyImageData();
-//            }
-//        }
-//
-//        isConfigChanged = false;
     }
-
-    private boolean checkOrientationChanged(Configuration newConfig) {
-        return currentOrientation != newConfig.orientation;
-    }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
 
         isConfigChanged = false;
         isFetched = false;
-        currentOrientation = getResources().getConfiguration().orientation;
 
         init();
         fetchGettyImageData();
@@ -117,10 +80,6 @@ public class MainActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.GONE);
             }
         };
-    }
-
-    private boolean isPortrait() {
-        return currentOrientation == Configuration.ORIENTATION_PORTRAIT;
     }
 
     private void bindView() {
