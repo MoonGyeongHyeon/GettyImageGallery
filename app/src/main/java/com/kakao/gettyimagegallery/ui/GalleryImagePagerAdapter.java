@@ -4,7 +4,6 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.util.SparseArray;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,10 +13,7 @@ import android.widget.TextView;
 import com.kakao.gettyimagegallery.R;
 import com.kakao.gettyimagegallery.model.GalleryImage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by khan.moon on 2018. 3. 9..
@@ -42,6 +38,7 @@ public class GalleryImagePagerAdapter extends PagerAdapter {
 
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
+        Log.d(TAG, "instantiateItem");
         View view = LayoutInflater.from(container.getContext())
                 .inflate(R.layout.item_page_container, container, false);
 
@@ -96,6 +93,7 @@ public class GalleryImagePagerAdapter extends PagerAdapter {
 
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
+        Log.d(TAG, "destroyItem");
         View view = (View) object;
         RecyclerView recyclerView = view.findViewById(R.id.recyclerview_page);
         LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();

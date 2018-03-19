@@ -2,13 +2,11 @@ package com.kakao.gettyimagegallery.ui;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -16,7 +14,6 @@ import com.kakao.gettyimagegallery.Environment;
 import com.kakao.gettyimagegallery.R;
 import com.kakao.gettyimagegallery.model.GalleryImage;
 import com.kakao.gettyimagegallery.net.Network;
-import com.kakao.gettyimagegallery.net.NetworkConnectivityManager;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -36,8 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     private ProgressBar progressBar;
-    private ViewPager viewPager;
     private Button networkRetryButton;
+    private FrameLayout container;
 
     private Network network;
     private List<GalleryImage> galleryImages;
@@ -74,16 +71,18 @@ public class MainActivity extends AppCompatActivity {
         viewInitializer = new ViewInitializer() {
             @Override
             public void init() {
-                initViewPager();
+                getSupportFragmentManager().beginTransaction()
+                        .add(R.id.framelayout_main_container, MainFragment.newInstance(galleryImages))
+                        .commit();
 
-                viewPager.setVisibility(View.VISIBLE);
+                container.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(View.GONE);
             }
         };
     }
 
     private void bindView() {
-        viewPager = findViewById(R.id.viewpager);
+        container = findViewById(R.id.framelayout_main_container);
         progressBar = findViewById(R.id.progressbar);
         networkRetryButton = findViewById(R.id.button_retry_connection);
     }
@@ -162,11 +161,4 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
-    private void initViewPager() {
-        GalleryImagePagerAdapter pagerAdapter = new GalleryImagePagerAdapter(galleryImages);
-
-        viewPager.setAdapter(pagerAdapter);
-    }
-
 }
