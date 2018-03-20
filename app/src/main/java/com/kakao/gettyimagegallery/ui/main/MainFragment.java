@@ -1,4 +1,4 @@
-package com.kakao.gettyimagegallery.ui;
+package com.kakao.gettyimagegallery.ui.main;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;

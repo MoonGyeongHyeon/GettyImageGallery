@@ -1,4 +1,4 @@
-package com.kakao.gettyimagegallery.ui;
+package com.kakao.gettyimagegallery.ui.common;
 
 /**
  * Created by khan.moon on 2018. 3. 19..

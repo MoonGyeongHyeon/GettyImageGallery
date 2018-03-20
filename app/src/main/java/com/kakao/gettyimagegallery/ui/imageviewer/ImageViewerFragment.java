@@ -1,4 +1,4 @@
-package com.kakao.gettyimagegallery.ui;
+package com.kakao.gettyimagegallery.ui.imageviewer;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -16,6 +16,8 @@ import android.widget.ImageView;
 
 import com.kakao.gettyimagegallery.R;
 import com.kakao.gettyimagegallery.model.GalleryImage;
+import com.kakao.gettyimagegallery.ui.common.OnBackPressedListener;
+import com.kakao.gettyimagegallery.ui.utils.FragmentUtils;
 
 import org.parceler.Parcels;
 

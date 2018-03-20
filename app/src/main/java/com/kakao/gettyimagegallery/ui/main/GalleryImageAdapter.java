@@ -1,4 +1,4 @@
-package com.kakao.gettyimagegallery.ui;
+package com.kakao.gettyimagegallery.ui.main;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;

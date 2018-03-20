@@ -1,4 +1,4 @@
-package com.kakao.gettyimagegallery.ui;
+package com.kakao.gettyimagegallery.ui.main;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -15,6 +15,9 @@ import com.kakao.gettyimagegallery.Environment;
 import com.kakao.gettyimagegallery.R;
 import com.kakao.gettyimagegallery.model.GalleryImage;
 import com.kakao.gettyimagegallery.net.Network;
+import com.kakao.gettyimagegallery.ui.common.OnBackPressedListener;
+import com.kakao.gettyimagegallery.ui.imageviewer.ImageViewerFragment;
+import com.kakao.gettyimagegallery.ui.utils.FragmentUtils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;

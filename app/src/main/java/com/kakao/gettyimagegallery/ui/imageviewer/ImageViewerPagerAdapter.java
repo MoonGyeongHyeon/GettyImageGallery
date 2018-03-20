@@ -1,4 +1,4 @@
-package com.kakao.gettyimagegallery.ui;
+package com.kakao.gettyimagegallery.ui.imageviewer;
 
 import android.support.v4.view.PagerAdapter;
 import android.view.LayoutInflater;

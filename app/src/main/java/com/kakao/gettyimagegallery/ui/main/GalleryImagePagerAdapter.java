@@ -1,4 +1,4 @@
-package com.kakao.gettyimagegallery.ui;
+package com.kakao.gettyimagegallery.ui.main;
 
 import android.support.v4.view.PagerAdapter;
 import android.support.v7.widget.LinearLayoutManager;
