@@ -13,6 +13,7 @@ import android.widget.TextView;
 import com.kakao.gettyimagegallery.R;
 import com.kakao.gettyimagegallery.model.GalleryImage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,7 +21,7 @@ import java.util.List;
  */
 
 public class GalleryImagePagerAdapter extends PagerAdapter {
-    private static final String TAG = "GalleryPagerAdapter";
+    public static final String TAG = "GalleryPagerAdapter";
     private static int MAX_PAGE_COUNT = 10;
 
     private List<GalleryImage> galleryImages;
@@ -88,7 +89,7 @@ public class GalleryImagePagerAdapter extends PagerAdapter {
 
         Log.d(TAG, "start: " + start + ", end: " + end);
 
-        return dividedGalleryImages;
+        return new ArrayList<>(dividedGalleryImages);
     }
 
     @Override

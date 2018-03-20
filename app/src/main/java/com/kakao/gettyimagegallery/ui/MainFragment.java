@@ -21,7 +21,7 @@ import java.util.List;
  */
 
 public class MainFragment extends Fragment {
-    private static final String TAG = "MainFragment";
+    public static final String TAG = "MainFragment";
 
     private ViewPager viewPager;
 

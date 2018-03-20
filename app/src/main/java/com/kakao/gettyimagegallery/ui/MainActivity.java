@@ -2,6 +2,7 @@ package com.kakao.gettyimagegallery.ui;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -15,6 +16,8 @@ import com.kakao.gettyimagegallery.R;
 import com.kakao.gettyimagegallery.model.GalleryImage;
 import com.kakao.gettyimagegallery.net.Network;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -30,7 +33,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "MainActivity";
+    public static final String TAG = "MainActivity";
 
     private ProgressBar progressBar;
     private Button networkRetryButton;
@@ -64,6 +67,18 @@ public class MainActivity extends AppCompatActivity {
         fetchGettyImageData();
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
+    }
+
     private void init() {
         Log.d(TAG, "init()");
         bindView();
@@ -72,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void init() {
                 getSupportFragmentManager().beginTransaction()
-                        .add(R.id.framelayout_main_container, MainFragment.newInstance(galleryImages))
+                        .add(R.id.framelayout_main_container, MainFragment.newInstance(galleryImages), MainFragment.TAG)
                         .commit();
 
                 container.setVisibility(View.VISIBLE);
@@ -160,5 +175,28 @@ public class MainActivity extends AppCompatActivity {
                 fetchGettyImageData();
             }
         });
+    }
+
+    @Subscribe
+    public void onEvent(GalleryImageAdapter.ImageClickEvent e) {
+        Fragment fragment = ImageViewerFragment.newInstance(e.getGalleryImages(), e.getPosition());
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.framelayout_main_container, fragment, ImageViewerFragment.TAG)
+                .addToBackStack(ImageViewerFragment.TAG)
+                .commit();
+    }
+
+    @Override
+    public void onBackPressed() {
+        Fragment fragment = FragmentUtils.getLastFragment(this);
+
+        if (fragment != null) {
+            if (fragment instanceof OnBackPressedListener) {
+                ((OnBackPressedListener) fragment).onBackPressed();
+                return;
+            }
+        }
+
+        super.onBackPressed();
     }
 }
