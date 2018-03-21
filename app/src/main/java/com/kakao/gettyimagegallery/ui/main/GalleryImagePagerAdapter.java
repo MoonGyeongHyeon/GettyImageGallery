@@ -1,5 +1,7 @@
 package com.kakao.gettyimagegallery.ui.main;
 
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.view.PagerAdapter;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -25,11 +27,12 @@ public class GalleryImagePagerAdapter extends PagerAdapter {
     private static int MAX_PAGE_COUNT = 10;
 
     private List<GalleryImage> galleryImages;
-    private SparseIntArray viewingPositions;
+
+    private Bundle bundle;
 
     public GalleryImagePagerAdapter(List<GalleryImage> galleryImages) {
         this.galleryImages = galleryImages;
-        viewingPositions = new SparseIntArray();
+        bundle = new Bundle();
     }
 
     @Override
@@ -51,27 +54,23 @@ public class GalleryImagePagerAdapter extends PagerAdapter {
 
         GalleryImageAdapter adapter = new GalleryImageAdapter(dividedGalleryImages);
         recyclerView.setAdapter(adapter);
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(view.getContext(), LinearLayoutManager.VERTICAL, false);
+
+        RecyclerView.LayoutManager layoutManager =
+                new LinearLayoutManager(view.getContext(), LinearLayoutManager.VERTICAL, false);
+        layoutManager.onRestoreInstanceState(bundle.getParcelable(String.valueOf(pos)));
         recyclerView.setLayoutManager(layoutManager);
+
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                    RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
-                    int viewingPostion = ((LinearLayoutManager) layoutManager).findFirstVisibleItemPosition();
-
-                    Log.d(TAG, "Put viewingPosition: " + viewingPostion);
-                    viewingPositions.put(pos, viewingPostion);
+                    bundle.putParcelable(String.valueOf(pos),
+                            recyclerView.getLayoutManager().onSaveInstanceState());
                 }
             }
         });
 
         pageNumber.setText("page " + (position + 1));
-
-        int viewingPosition = viewingPositions.get(position);
-        recyclerView.scrollToPosition(viewingPosition);
-
-        Log.d(TAG, "instantiate Position: " + position + ", viewingPosition: " + viewingPosition);
 
         container.addView(view);
 
