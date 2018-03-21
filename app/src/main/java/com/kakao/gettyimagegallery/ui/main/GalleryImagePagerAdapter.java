@@ -40,19 +40,31 @@ public class GalleryImagePagerAdapter extends PagerAdapter {
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
         Log.d(TAG, "instantiateItem");
+        final int pos = position;
         View view = LayoutInflater.from(container.getContext())
                 .inflate(R.layout.item_page_container, container, false);
 
         RecyclerView recyclerView = view.findViewById(R.id.recyclerview_page);
         TextView pageNumber = view.findViewById(R.id.textview_page_number);
 
-
-        List<GalleryImage> dividedGalleryImages = divideGalleryImages(position);
+        List<GalleryImage> dividedGalleryImages = divideGalleryImages(pos);
 
         GalleryImageAdapter adapter = new GalleryImageAdapter(dividedGalleryImages);
         recyclerView.setAdapter(adapter);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(view.getContext(), LinearLayoutManager.VERTICAL, false);
         recyclerView.setLayoutManager(layoutManager);
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+                    int viewingPostion = ((LinearLayoutManager) layoutManager).findFirstVisibleItemPosition();
+
+                    Log.d(TAG, "Put viewingPosition: " + viewingPostion);
+                    viewingPositions.put(pos, viewingPostion);
+                }
+            }
+        });
 
         pageNumber.setText("page " + (position + 1));
 
@@ -95,16 +107,7 @@ public class GalleryImagePagerAdapter extends PagerAdapter {
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
         Log.d(TAG, "destroyItem");
-        View view = (View) object;
-        RecyclerView recyclerView = view.findViewById(R.id.recyclerview_page);
-        LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-        int viewingPosition = layoutManager.findFirstVisibleItemPosition();
-        viewingPositions.append(position, viewingPosition);
-
-        Log.d(TAG, "destroy position: " + position + ", viwingPosition: " + viewingPosition);
-
-
-        container.removeView(view);
+        container.removeView((View) object);
     }
 
     @Override
