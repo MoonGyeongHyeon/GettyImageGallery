@@ -1,14 +1,13 @@
-package com.kakao.gettyimagegallery.ui;
+package com.kakao.gettyimagegallery.ui.main;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.support.v4.view.ViewPager;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -16,8 +15,12 @@ import com.kakao.gettyimagegallery.Environment;
 import com.kakao.gettyimagegallery.R;
 import com.kakao.gettyimagegallery.model.GalleryImage;
 import com.kakao.gettyimagegallery.net.Network;
-import com.kakao.gettyimagegallery.net.NetworkConnectivityManager;
+import com.kakao.gettyimagegallery.ui.common.OnBackPressedListener;
+import com.kakao.gettyimagegallery.ui.imageviewer.ImageViewerFragment;
+import com.kakao.gettyimagegallery.ui.utils.FragmentUtils;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -33,18 +36,16 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "MainActivity";
+    public static final String TAG = "MainActivity";
 
-    private RecyclerView recyclerView;
     private ProgressBar progressBar;
-    private ViewPager viewPager;
     private Button networkRetryButton;
+    private FrameLayout container;
 
     private Network network;
     private List<GalleryImage> galleryImages;
     private boolean isFetched;
     private boolean isConfigChanged;
-    private int currentOrientation;
 
     private ViewInitializer viewInitializer;
 
@@ -53,42 +54,7 @@ public class MainActivity extends AppCompatActivity {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         Log.d(TAG, "orientation: " + newConfig.orientation);
-
-        isConfigChanged = true;
-
-        if (checkOrientationChanged(newConfig)) {
-            Log.d(TAG, "Orientation is changed");
-            currentOrientation = newConfig.orientation;
-            setContentView(R.layout.activity_main);
-
-            init();
-
-            if (isFetched) {
-                Log.d(TAG, "is fetched");
-                viewInitializer.init();
-
-                int currentPosition;
-                if (isPortrait()) {
-                    currentPosition = viewPager.getCurrentItem();
-                    recyclerView.scrollToPosition(currentPosition);
-                } else {
-                    currentPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
-                    viewPager.setCurrentItem(currentPosition);
-                }
-                Log.d(TAG, "pos: " + currentPosition);
-            } else {
-                Log.d(TAG, "is not fetched");
-                fetchGettyImageData();
-            }
-        }
-
-        isConfigChanged = false;
     }
-
-    private boolean checkOrientationChanged(Configuration newConfig) {
-        return currentOrientation != newConfig.orientation;
-    }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,47 +65,42 @@ public class MainActivity extends AppCompatActivity {
 
         isConfigChanged = false;
         isFetched = false;
-        currentOrientation = getResources().getConfiguration().orientation;
 
         init();
         fetchGettyImageData();
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
+    }
+
     private void init() {
         Log.d(TAG, "init()");
-        if (isPortrait()) {
-            bindPortraitView();
+        bindView();
 
-            viewInitializer = new ViewInitializer() {
-                @Override
-                public void init() {
-                    initRecyclerView();
+        viewInitializer = new ViewInitializer() {
+            @Override
+            public void init() {
+                getSupportFragmentManager().beginTransaction()
+                        .add(R.id.framelayout_main_container, MainFragment.newInstance(galleryImages), MainFragment.TAG)
+                        .commit();
 
-                    recyclerView.setVisibility(View.VISIBLE);
-                    progressBar.setVisibility(View.GONE);
-                }
-            };
-        } else {
-            bindLandscapeView();
-
-            viewInitializer = new ViewInitializer() {
-                @Override
-                public void init() {
-                    initViewPager();
-
-                    viewPager.setVisibility(View.VISIBLE);
-                    progressBar.setVisibility(View.GONE);
-                }
-            };
-        }
+                container.setVisibility(View.VISIBLE);
+                progressBar.setVisibility(View.GONE);
+            }
+        };
     }
 
-    private boolean isPortrait() {
-        return currentOrientation == Configuration.ORIENTATION_PORTRAIT;
-    }
-
-    private void bindPortraitView() {
-        recyclerView = findViewById(R.id.recyclerview);
+    private void bindView() {
+        container = findViewById(R.id.framelayout_main_container);
         progressBar = findViewById(R.id.progressbar);
         networkRetryButton = findViewById(R.id.button_retry_connection);
     }
@@ -219,25 +180,26 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void bindLandscapeView() {
-        viewPager = findViewById(R.id.viewpager);
-        progressBar = findViewById(R.id.progressbar);
-        networkRetryButton = findViewById(R.id.button_retry_connection);
+    @Subscribe
+    public void onEvent(GalleryImageAdapter.ImageClickEvent e) {
+        Fragment fragment = ImageViewerFragment.newInstance(e.getGalleryImages(), e.getPosition());
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.framelayout_main_container, fragment, ImageViewerFragment.TAG)
+                .addToBackStack(ImageViewerFragment.TAG)
+                .commit();
     }
 
-    private void initRecyclerView() {
-        RecyclerView.LayoutManager manager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        recyclerView.setLayoutManager(manager);
+    @Override
+    public void onBackPressed() {
+        Fragment fragment = FragmentUtils.getLastFragment(this);
 
-        GalleryImageAdapter adapter = new GalleryImageAdapter(galleryImages);
-        recyclerView.setAdapter(adapter);
+        if (fragment != null) {
+            if (fragment instanceof OnBackPressedListener) {
+                ((OnBackPressedListener) fragment).onBackPressed();
+                return;
+            }
+        }
+
+        super.onBackPressed();
     }
-
-
-    private void initViewPager() {
-        GalleryImagePagerAdapter pagerAdapter = new GalleryImagePagerAdapter(galleryImages);
-
-        viewPager.setAdapter(pagerAdapter);
-    }
-
 }

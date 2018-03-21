@@ -1,4 +1,4 @@
-package com.kakao.gettyimagegallery.ui;
+package com.kakao.gettyimagegallery.ui.imageviewer;
 
 import android.support.v4.view.PagerAdapter;
 import android.view.LayoutInflater;
@@ -6,26 +6,22 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.kakao.gettyimagegallery.R;
 import com.kakao.gettyimagegallery.model.GalleryImage;
-import com.kakao.gettyimagegallery.net.NetworkConnectivityManager;
 
 import java.util.List;
 import java.util.Locale;
 
 /**
- * Created by khan.moon on 2018. 3. 9..
+ * Created by khan.moon on 2018. 3. 16..
  */
 
-public class GalleryImagePagerAdapter extends PagerAdapter {
-    private static final String TAG = "GalleryPagerAdapter";
-
+public class ImageViewerPagerAdapter extends PagerAdapter {
     private List<GalleryImage> galleryImages;
 
-    public GalleryImagePagerAdapter(List<GalleryImage> galleryImages) {
+    public ImageViewerPagerAdapter(List<GalleryImage> galleryImages) {
         this.galleryImages = galleryImages;
     }
 
@@ -37,21 +33,19 @@ public class GalleryImagePagerAdapter extends PagerAdapter {
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
         View view = LayoutInflater.from(container.getContext())
-                .inflate(R.layout.gallery_image, container, false);
+                .inflate(R.layout.item_image_viewer, container, false);
+
+        TextView title = view.findViewById(R.id.textview_viewer_title);
+        ImageView image = view.findViewById(R.id.imageview_viewer);
 
         GalleryImage galleryImage = galleryImages.get(position);
 
-        ImageView imageView = view.findViewById(R.id.imageview_gallery_image);
-        TextView nameTextView = view.findViewById(R.id.textview_gallery_image_name);
-        TextView numberTextView = view.findViewById(R.id.textview_gallery_number);
-
+        title.setText(String.format(Locale.getDefault(),
+                "%d. %s", galleryImage.getNumber(), galleryImage.getName()));
         Glide.with(view.getContext())
                 .load(galleryImage.getUrl())
                 .error(R.drawable.img_loading_failed)
-                .into(imageView);
-
-        nameTextView.setText(galleryImage.getName());
-        numberTextView.setText(String.format(Locale.getDefault(),"%d.",galleryImage.getNumber()));
+                .into(image);
 
         container.addView(view);
 
